@@ -1,0 +1,54 @@
+AWSTemplateFormatVersion: 2010-09-09
+Resources:
+  DenoLambdaLayer:
+    Type: "AWS::Lambda::LayerVersion"
+    Properties:
+      Content: 
+        S3Bucket: $LAYER_S3_BUCKET
+        S3Key: deno-lambda-layer.zip
+      LayerName: deno-lambda-layer
+
+  LambdaDenoCleanArchitecture:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code: ./release/app.zip
+      FunctionName: LambdaDenoCleanArchitecture
+      Handler: index.handler
+      Runtime: provided.al2
+      Role:
+        Fn::GetAtt:
+          - "LambdaRole"
+          - "Arn"
+      MemorySize: 1024
+      Timeout: 30
+      Layers:
+        - !Ref DenoLambdaLayer
+  Users:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Users
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: N
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 3
+        WriteCapacityUnits: 3
+
+  LambdaRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - "edgelambda.amazonaws.com"
+                - "lambda.amazonaws.com"
+                - "dynamodb.amazonaws.com"
+                - "cloudwatch.amazonaws.com"
+            Action:
+              - sts:AssumeRole
