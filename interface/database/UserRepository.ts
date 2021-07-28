@@ -10,14 +10,14 @@ export class UserRepository extends IUserRepository {
     this.connection = connection
   }
 
-  get(id: number): User {
+  get(id: number): Promise<User> {
     return this.connection.get({
       TableName: 'Users',
       Key: { id: id },
     })
   }
 
-  create(user: User): User {
+  create(user: User): Promise<User> {
     return this.connection.put({
       TableName: 'Users',
       Item: {
